@@ -9,46 +9,17 @@ on:
 jobs:
   security:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 1. CORREÇÃO DO ERRO - Sincroniza package.json com package-lock.json
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies and sync
-        run: |
-          # Se não existir package-lock.json, cria
-          if [ ! -f "package-lock.json" ]; then
-            npm install
-          else
-            # Sincroniza package.json com package-lock.json
-            npm ci
-          fi
-          
-          # Verifica se cross-spawn está instalado
-          npm ls cross-spawn || echo "cross-spawn não encontrado, instalando..."
-          npm list --depth=0
-
-      # 2. Agora os scans
+      # 1. ANÁLISE DE SECRETOS (primeiro - é rápido)
       - name: Gitleaks Scan
         uses: gitleaks/gitleaks-action@v2
         with:
           fail: true
-
-      - name: Snyk Code Scan
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high --policy-path=.snyk
-          # Força análise mesmo com lock file desatualizado
-          # args: --severity-threshold=high --dev
 
       - name: TruffleHog Scan
         uses: trufflesecurity/trufflehog@main
@@ -57,16 +28,30 @@ jobs:
           base: HEAD~1
           head: HEAD
 
-      - name: Checkov Scan
+      # 2. ANÁLISE DE CÓDIGO (SAST - antes do build)
+      - name: Snyk Code Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --policy-path=.snyk
+          # Adicionar para projetos não-Node.js:
+          # languages: java,python,go,php,etc
+
+      # 3. ANÁLISE DE INFRAESTRUTURA
+      - name: Checkov Scan (IaC)
         uses: bridgecrewio/checkov-action@master
         with:
           directory: .
           quiet: true
+          # Foca em Dockerfile primeiro
+          # framework: dockerfile,terraform,cloudformation
 
+      # 4. SOMENTE DEPOIS: Build e scan de container
       - name: Build Docker image
         run: docker build -t app-segura .
 
-      - name: Snyk Docker Scan
+      - name: Snyk Docker Scan (Container)
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
