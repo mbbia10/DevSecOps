@@ -2,7 +2,9 @@ name: Security Pipeline
 
 on:
   push:
+    branches: [ main, master ]
   pull_request:
+    branches: [ main, master ]
 
 jobs:
   security:
@@ -20,7 +22,7 @@ jobs:
       - name: TruffleHog Scan
         uses: trufflesecurity/trufflehog@main
         with:
-          path: .
+          path: ./
           base: HEAD~1
           head: HEAD
 
@@ -42,8 +44,7 @@ jobs:
         with:
           args: --severity-threshold=high --policy-path=.snyk
 
-
-       - name: Checkov Scan
+      - name: Checkov Scan
         uses: bridgecrewio/checkov-action@master
         with:
           directory: .
