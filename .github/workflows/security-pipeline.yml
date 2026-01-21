@@ -25,7 +25,7 @@ jobs:
           head: HEAD
             
       - name: Snyk Scan
-        uses: snyk/actions/node@master
+        uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
