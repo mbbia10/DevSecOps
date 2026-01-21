@@ -17,3 +17,9 @@ jobs:
         with:
           fail: true
 
+      - name: TruffleHog Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: .
+          base: HEAD~1
+          head: HEAD
