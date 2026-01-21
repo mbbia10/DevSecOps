@@ -1,17 +1,37 @@
 {
   "name": "app-segura",
   "version": "1.0.0",
- 
-  "dependencies": {
-    "express": "^4.19.2"
+
+  "scripts": {
+    "preinstall": "npx --yes npm-force-resolutions"
   },
+
+  "dependencies": {
+    "express": "^4.19.2",
+    "cross-spawn": "^7.0.5",
+    "glob": "^10.5.0"
+  },
+
+  "devDependencies": {
+    "npm": "^10.9.0"
+  },
+
   "resolutions": {
     "cross-spawn": "^7.0.5",
     "glob": "^10.5.0"
   },
+
   "overrides": {
     "cross-spawn": "^7.0.5",
     "glob": "^10.5.0",
-    "foreground-child": "^3.2.1"
+    "foreground-child": {
+      "cross-spawn": "^7.0.5"
+    },
+    "npm": {
+      "glob": "^10.5.0",
+      "foreground-child": {
+        "cross-spawn": "^7.0.5"
+      }
+    }
   }
 }
