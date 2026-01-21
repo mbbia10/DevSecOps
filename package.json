@@ -2,7 +2,11 @@
   "name": "app-segura",
   "version": "1.0.0",
   "dependencies": {
-      "express": "^4.19.2"
-
+    "express": "^4.19.2"
+  },
+  "overrides": {
+    "cross-spawn": "^7.0.5",
+    "glob": "^10.5.0",
+    "foreground-child": "^3.2.1"
   }
 }
