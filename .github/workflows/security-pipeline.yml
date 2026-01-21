@@ -25,12 +25,19 @@ jobs:
           head: HEAD
 
       - name: Build Docker image
-        run: docker build -t nome-da-imagem .
+        run: docker build -t app-segura .
 
       - name: Snyk Docker Scan
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: nome-da-imagem
-          args: --severity-threshold=high
+          image: app-segura
+          args: --severity-threshold=high --policy-path=.snyk
+
+      - name: Snyk Code Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --policy-path=.snyk
