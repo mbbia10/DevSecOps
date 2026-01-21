@@ -23,3 +23,10 @@ jobs:
           path: .
           base: HEAD~1
           head: HEAD
+            
+      - name: Snyk Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
