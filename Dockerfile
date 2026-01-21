@@ -1,5 +1,5 @@
 FROM node:24-alpine
-
+# node 4 mais atul
 # Instala ferramentas de segurança (opcional, mas recomendado)
 RUN apk add --no-cache tini
 
