@@ -23,10 +23,13 @@ jobs:
           path: .
           base: HEAD~1
           head: HEAD
-            
-      - name: Snyk Scan
+
+      - name: Build Docker image
+        run: docker build -t nome-da-imagem .
+
+      - name: Snyk Docker Scan
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          command: test
+          image: nome-da-imagem
