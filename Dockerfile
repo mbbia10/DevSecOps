@@ -25,4 +25,4 @@ USER nodejs
 ENTRYPOINT ["/sbin/tini", "--"]
 
 # Comando para rodar a aplicação
-CMD ["node", "app/index.js"]  # Ajuste conforme seu ponto de entrada
+CMD ["node",]  # Ajuste conforme seu ponto de entrada
