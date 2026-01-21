@@ -1,0 +1,8 @@
+version: v1.25.0
+ignore:
+  SNYK-JS-TAR-13782958:
+    - reason: "npm internal dependency"
+      expires: 2026-12-31
+  SNYK-JS-TAR-15038581:
+    - reason: "npm internal dependency"
+      expires: 2026-12-31
