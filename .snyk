@@ -1,7 +1,14 @@
+version: v1.25.0
+patch: {}
 ignore:
   SNYK-JS-GLOB-14040952:
-    - reason: "Vulnerability from base image global npm dependency"
-      expires: 2026-12-31
+    - 'npm > *':
+        reason: "Vulnerability from base image global npm dependency"
+        expires: 2026-12-31
+    - '* > glob@10.4.5':
+        reason: "Vulnerability in npm internal dependency"
+        expires: 2026-12-31
   SNYK-JS-TAR-15038581:
-    - reason: "Vulnerability from base image global npm dependency"
-      expires: 2026-12-31
+    - 'npm > *':
+        reason: "Vulnerability from base image global npm dependency"
+        expires: 2026-12-31
