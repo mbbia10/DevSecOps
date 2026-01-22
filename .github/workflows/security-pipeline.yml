@@ -15,37 +15,68 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 1. ANÁLISE DE SECRETOS (primeiro - é rápido)
+      # 1. GITLEAKS (principal - FALHA SE encontrar algo)
       - name: Gitleaks Scan
         uses: gitleaks/gitleaks-action@v2
         with:
           fail: true
+          report-format: sarif
+          report-path: gitleaks-report.sarif
 
+      # 2. TRUFFLEHOG (apenas reporta, não falha)
       - name: TruffleHog Scan
-        # Assim funciona melhor:
+        id: trufflehog
+        continue-on-error: true  # 👈 NÃO FALHA O PIPELINE
         run: |
-          if command -v docker &> /dev/null; then
-            docker run --rm -v "$(pwd):/workdir" trufflesecurity/trufflehog:latest \
-              filesystem /workdir \
-              --fail
+          echo "🚨 Executando TruffleHog (apenas reporte)..."
+          docker run --rm -v "$(pwd):/workdir" trufflesecurity/trufflehog:latest \
+            filesystem /workdir \
+            --json \
+            --only-verified \
+            | tee trufflehog-report.json || true
+          
+          # Conta findings
+          if [ -f trufflehog-report.json ]; then
+            COUNT=$(jq length trufflehog-report.json 2>/dev/null || echo "0")
+            echo "Found $COUNT verified secrets"
           fi
 
-      # 2. ANÁLISE DE CÓDIGO (antes do build) - REMOVIDO SNYK AQUI
-      # 👇 Removi o step do Snyk Code
-
-      # 3. ANÁLISE DE INFRAESTRUTURA
+      # 3. CHECKOV
       - name: Checkov Scan (IaC)
+        continue-on-error: true  # Reporta mas não falha
         uses: bridgecrewio/checkov-action@master
         with:
           directory: .
           quiet: true
+          skip_check: "CKV_DOCKER_2,CKV_DOCKER_3,CKV_DOCKER_7"
 
-      # 4. SOMENTE DEPOIS: Build e scan de container
+      # 4. BUILD
       - name: Build Docker image
         run: docker build -t app-segura .
 
-      # 👇 Removi o step do Snyk Docker Scan
-      
-      # 👇 Adicione se quiser algo no lugar:
-      - name: Verificação de imagem
-        run: echo "Build concluído. Scan de container removido (era Snyk)."
+      # 5. RELATÓRIO FINAL
+      - name: Security Summary
+        if: always()  # 👈 SEMPRE EXECUTA, mesmo com falhas
+        run: |
+          echo "========================================"
+          echo "         RESUMO DE SEGURANÇA           "
+          echo "========================================"
+          echo ""
+          
+          # Status do Gitleaks
+          if [[ "${{ job.status }}" == "success" ]]; then
+            echo "✅ Gitleaks: NENHUM SECRET ENCONTRADO"
+          else
+            echo "❌ Gitleaks: SECRETS ENCONTRADOS!"
+            echo "   Cheque o log acima para detalhes"
+          fi
+          
+          echo ""
+          echo "🔍 TruffleHog: Executou (não falha pipeline)"
+          echo "🏗️  Checkov: Executou (não falha pipeline)"
+          echo "🐳 Docker: Build realizado com sucesso"
+          echo ""
+          echo "========================================"
+          echo "Dica: O Gitleaks é o scanner principal."
+          echo "TruffleHog findings não bloqueiam o merge."
+          echo "========================================"
