@@ -1,12 +1,15 @@
 FROM node:24-alpine
-# node 4 mais atul
+
 # Instala ferramentas de segurança (opcional, mas recomendado)
 RUN apk add --no-cache tini
 
 WORKDIR /app
 
-# Copia apenas os arquivos de dependências primeiro (melhor cache)
-COPY package.json package-lock.json ./
+# Copia o package.json (sempre existe)
+COPY package.json ./
+
+# Copia package-lock.json SE existir
+COPY package-lock.json* ./
 
 # Instala apenas dependências de produção e faz audit fix
 RUN npm ci --only=production && \
@@ -25,4 +28,4 @@ USER nodejs
 ENTRYPOINT ["/sbin/tini", "--"]
 
 # Comando para rodar a aplicação
-CMD ["node",]  # Ajuste conforme seu ponto de entrada
+CMD ["node", "app/index.js"]  # Ajuste conforme seu ponto de entrada
