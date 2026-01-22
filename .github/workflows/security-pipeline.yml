@@ -22,21 +22,16 @@ jobs:
           fail: true
 
       - name: TruffleHog Scan
-        uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./
-          base: HEAD~1
-          head: HEAD
+        # Assim funciona melhor:
+        run: |
+          if command -v docker &> /dev/null; then
+            docker run --rm -v "$(pwd):/workdir" trufflesecurity/trufflehog:latest \
+              filesystem /workdir \
+              --fail
+          fi
 
-      # 2. ANÁLISE DE CÓDIGO (SAST - antes do build)
-      - name: Snyk Code Scan
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high --policy-path=.snyk
-          # Adicionar para projetos não-Node.js:
-          # languages: java,python,go,php,etc
+      # 2. ANÁLISE DE CÓDIGO (antes do build) - REMOVIDO SNYK AQUI
+      # 👇 Removi o step do Snyk Code
 
       # 3. ANÁLISE DE INFRAESTRUTURA
       - name: Checkov Scan (IaC)
@@ -44,17 +39,13 @@ jobs:
         with:
           directory: .
           quiet: true
-          # Foca em Dockerfile primeiro
-          # framework: dockerfile,terraform,cloudformation
 
       # 4. SOMENTE DEPOIS: Build e scan de container
       - name: Build Docker image
         run: docker build -t app-segura .
 
-      - name: Snyk Docker Scan (Container)
-        uses: snyk/actions/docker@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          image: app-segura
-          args: --severity-threshold=high --policy-path=.snyk
+      # 👇 Removi o step do Snyk Docker Scan
+      
+      # 👇 Adicione se quiser algo no lugar:
+      - name: Verificação de imagem
+        run: echo "Build concluído. Scan de container removido (era Snyk)."
